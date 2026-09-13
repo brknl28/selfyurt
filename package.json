@@ -1,0 +1,18 @@
+{
+  "name": "selfyurt",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "bun@1.3.7",
+  "workspaces": [
+    "packages/web",
+    "packages/api"
+  ],
+  "scripts": {
+    "dev": "./scripts/dev.sh",
+    "dev:real": "./scripts/dev-real.sh",
+    "build": "./scripts/build.sh",
+    "lint": "./scripts/lint.sh",
+    "format": "./scripts/format.sh",
+    "release": "./scripts/release.sh"
+  }
+}

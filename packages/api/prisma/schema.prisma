@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum DeploymentStatus {
+  DEPLOYING
+  RUNNING
+  STOPPED
+  ERROR
+}
+
+enum DeploymentAccessType {
+  PUBLIC
+  INTERNAL
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Settings {
+  id         String   @id @default("singleton")
+  baseDomain String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Deployment {
+  id         String           @id @default(cuid())
+  appId      String
+  instanceId String           @unique
+  hostname   String?          @unique
+  exposePublic Boolean        @default(true)
+  accessType DeploymentAccessType @default(PUBLIC)
+  internalEndpoint String?
+  status     DeploymentStatus @default(DEPLOYING)
+  envJson    String
+  version    String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  route      Route?
+}
+
+model Route {
+  id           String     @id @default(cuid())
+  hostname     String     @unique
+  deploymentId String     @unique
+  target       String
+  createdAt    DateTime   @default(now())
+  deployment   Deployment @relation(fields: [deploymentId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  payloadJson String
+  createdAt   DateTime @default(now())
+}

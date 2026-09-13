@@ -1,0 +1,60 @@
+id: postgres
+name: Postgres
+description: PostgreSQL database service for internal workloads.
+category: database
+icon: database
+compose:
+  template: |
+    services:
+      db:
+        image: postgres:16-alpine
+        container_name: sy-{{INSTANCE_ID}}-db
+        restart: unless-stopped
+        environment:
+          POSTGRES_USER: "{{POSTGRES_USER}}"
+          POSTGRES_PASSWORD: "{{POSTGRES_PASSWORD}}"
+          POSTGRES_DB: "{{POSTGRES_DB}}"
+        volumes:
+          - {{INSTANCE_ID}}_data:/var/lib/postgresql/data
+        networks:
+          - selfyurt_net
+    volumes:
+      {{INSTANCE_ID}}_data:
+    networks:
+      selfyurt_net:
+        external: true
+  variables:
+    - key: POSTGRES_USER
+      required: true
+    - key: POSTGRES_PASSWORD
+      required: true
+    - key: POSTGRES_DB
+      required: true
+ingress:
+  targetService: db
+  targetPort: 5432
+access:
+  defaultExposePublic: false
+  supportsPublic: false
+  protocol: tcp
+envSchema:
+  - key: POSTGRES_USER
+    label: Postgres User
+    required: true
+    default: postgres
+    secret: false
+  - key: POSTGRES_PASSWORD
+    label: Postgres Password
+    required: true
+    default: ''
+    secret: true
+  - key: POSTGRES_DB
+    label: Database Name
+    required: true
+    default: app
+    secret: false
+volumes:
+  - name: data
+    mountPath: /var/lib/postgresql/data
+    keepOnUninstall: true
+notes: Internal-only in MVP (no public exposure).

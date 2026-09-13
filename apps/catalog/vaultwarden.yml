@@ -1,0 +1,46 @@
+id: vaultwarden
+name: Vaultwarden
+description: Lightweight Bitwarden-compatible server.
+category: security
+icon: shield
+compose:
+  template: |
+    services:
+      vaultwarden:
+        image: vaultwarden/server:latest
+        container_name: sy-{{INSTANCE_ID}}-vaultwarden
+        restart: unless-stopped
+        environment:
+          WEBSOCKET_ENABLED: "true"
+          SIGNUPS_ALLOWED: "false"
+          ADMIN_TOKEN: "{{ADMIN_TOKEN}}"
+        volumes:
+          - {{INSTANCE_ID}}_data:/data
+        networks:
+          - selfyurt_net
+    volumes:
+      {{INSTANCE_ID}}_data:
+    networks:
+      selfyurt_net:
+        external: true
+  variables:
+    - key: ADMIN_TOKEN
+      required: true
+ingress:
+  targetService: vaultwarden
+  targetPort: 80
+access:
+  defaultExposePublic: true
+  supportsPublic: true
+  protocol: http
+envSchema:
+  - key: ADMIN_TOKEN
+    label: Admin Token
+    required: true
+    default: ''
+    secret: true
+volumes:
+  - name: data
+    mountPath: /data
+    keepOnUninstall: true
+notes: Not yet deploy-enabled in MVP agent.

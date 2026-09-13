@@ -1,0 +1,32 @@
+[
+  {
+    "id": "nginx-hello",
+    "name": "Hello",
+    "category": "utility",
+    "manifest": "nginx-hello.yml"
+  },
+  {
+    "id": "postgres",
+    "name": "Postgres",
+    "category": "database",
+    "manifest": "postgres.yml"
+  },
+  {
+    "id": "redis",
+    "name": "Redis",
+    "category": "database",
+    "manifest": "redis.yml"
+  },
+  {
+    "id": "n8n",
+    "name": "n8n",
+    "category": "automation",
+    "manifest": "n8n.yml"
+  },
+  {
+    "id": "vaultwarden",
+    "name": "Vaultwarden",
+    "category": "security",
+    "manifest": "vaultwarden.yml"
+  }
+]

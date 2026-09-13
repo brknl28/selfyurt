@@ -1,0 +1,39 @@
+id: n8n
+name: n8n
+description: Workflow automation tool.
+category: automation
+icon: workflow
+compose:
+  template: |
+    services:
+      n8n:
+        image: n8nio/n8n:latest
+        container_name: sy-{{INSTANCE_ID}}-n8n
+        restart: unless-stopped
+        environment:
+          N8N_HOST: "{{HOSTNAME}}"
+          N8N_PORT: "5678"
+          WEBHOOK_URL: "https://{{HOSTNAME}}/"
+        volumes:
+          - {{INSTANCE_ID}}_data:/home/node/.n8n
+        networks:
+          - selfyurt_net
+    volumes:
+      {{INSTANCE_ID}}_data:
+    networks:
+      selfyurt_net:
+        external: true
+  variables: []
+ingress:
+  targetService: n8n
+  targetPort: 5678
+access:
+  defaultExposePublic: true
+  supportsPublic: true
+  protocol: http
+envSchema: []
+volumes:
+  - name: data
+    mountPath: /home/node/.n8n
+    keepOnUninstall: true
+notes: Not yet deploy-enabled in MVP agent.

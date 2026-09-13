@@ -1,0 +1,94 @@
+name: selfyurt
+
+networks:
+  selfyurt_net:
+    name: selfyurt_net
+    driver: bridge
+
+volumes:
+  selfyurt_db:
+  selfyurt_runtime:
+  selfyurt_caddy_data:
+  selfyurt_caddy_config_generated:
+
+services:
+  caddy:
+    image: caddy:2.8.4-alpine
+    container_name: selfyurt_caddy
+    restart: unless-stopped
+    depends_on:
+      - api
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SELFYURT_PANEL_HOST: ${SELFYURT_PANEL_HOST:-localhost}
+      SELFYURT_LETSENCRYPT_EMAIL: ${SELFYURT_LETSENCRYPT_EMAIL:-}
+    volumes:
+      - ./caddy/Caddyfile.base:/etc/caddy/Caddyfile:ro
+      - selfyurt_caddy_config_generated:/etc/caddy/generated
+      - selfyurt_caddy_data:/data
+      - selfyurt_caddy_data:/config
+    networks:
+      - selfyurt_net
+
+  api:
+    build:
+      context: ..
+      dockerfile: packages/api/Dockerfile
+    container_name: selfyurt_api
+    restart: unless-stopped
+    depends_on:
+      - agent
+    environment:
+      NODE_ENV: production
+      PORT: "8787"
+      DATABASE_URL: file:/data/selfyurt.db
+      AGENT_MODE: ${SELFYURT_AGENT_MODE:-real}
+      AGENT_URL: http://agent:7070
+      AGENT_TOKEN: ${SELFYURT_AGENT_TOKEN}
+      SESSION_SECRET: ${SELFYURT_SESSION_SECRET}
+      ADMIN_EMAIL: ${SELFYURT_ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${SELFYURT_ADMIN_PASSWORD}
+      BASE_DOMAIN: ${SELFYURT_BASE_DOMAIN:-}
+      CATALOG_DIR: /opt/selfyurt/apps/catalog
+      COOKIE_SECURE: ${SELFYURT_COOKIE_SECURE:-false}
+    volumes:
+      - selfyurt_db:/data
+      - ../apps/catalog:/opt/selfyurt/apps/catalog:ro
+    networks:
+      - selfyurt_net
+
+  web:
+    build:
+      context: ..
+      dockerfile: packages/web/Dockerfile
+    container_name: selfyurt_web
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE: /api
+    networks:
+      - selfyurt_net
+
+  agent:
+    build:
+      context: ..
+      dockerfile: packages/agent/Dockerfile
+    container_name: selfyurt_agent
+    restart: unless-stopped
+    environment:
+      PORT: "7070"
+      AGENT_TOKEN: ${SELFYURT_AGENT_TOKEN}
+      CATALOG_DIR: /opt/selfyurt/catalog
+      RUNTIME_DIR: /opt/selfyurt/runtime
+      CADDY_SNIPPETS_DIR: /opt/selfyurt/caddy-generated
+      CADDY_CONTAINER_NAME: selfyurt_caddy
+      DOCKER_NETWORK_NAME: selfyurt_net
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - selfyurt_runtime:/opt/selfyurt/runtime
+      - selfyurt_caddy_config_generated:/opt/selfyurt/caddy-generated
+      - ../apps/catalog:/opt/selfyurt/catalog:ro
+    networks:
+      - selfyurt_net

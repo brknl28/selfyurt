@@ -1,0 +1,32 @@
+# Dependencies
+node_modules
+.bun
+
+# Build outputs
+dist
+build
+coverage
+*.tsbuildinfo
+
+# Runtime state
+*.log
+*.pid
+tmp
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Prisma / sqlite
+*.db
+*.db-journal
+
+# OS / editor
+.DS_Store
+.vscode
+.idea
+
+# Generated runtime
+deploy/caddy/generated/*.caddy
+!deploy/caddy/generated/.gitkeep

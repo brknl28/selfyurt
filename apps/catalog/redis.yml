@@ -1,0 +1,36 @@
+id: redis
+name: Redis
+description: Redis cache/key-value store.
+category: database
+icon: database
+compose:
+  template: |
+    services:
+      redis:
+        image: redis:7-alpine
+        container_name: sy-{{INSTANCE_ID}}-redis
+        restart: unless-stopped
+        command: ["redis-server", "--appendonly", "yes"]
+        volumes:
+          - {{INSTANCE_ID}}_data:/data
+        networks:
+          - selfyurt_net
+    volumes:
+      {{INSTANCE_ID}}_data:
+    networks:
+      selfyurt_net:
+        external: true
+  variables: []
+ingress:
+  targetService: redis
+  targetPort: 6379
+access:
+  defaultExposePublic: false
+  supportsPublic: false
+  protocol: tcp
+envSchema: []
+volumes:
+  - name: data
+    mountPath: /data
+    keepOnUninstall: true
+notes: Internal-only in MVP (no public exposure).
