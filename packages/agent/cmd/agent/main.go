@@ -16,28 +16,29 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/yaml.v3"
-
 	"github.com/selfyurt/selfyurt/packages/agent/internal/auth"
+	"github.com/selfyurt/selfyurt/packages/agent/internal/backup"
 	"github.com/selfyurt/selfyurt/packages/agent/internal/caddy"
+	"github.com/selfyurt/selfyurt/packages/agent/internal/catalog"
 	"github.com/selfyurt/selfyurt/packages/agent/internal/compose"
 	"github.com/selfyurt/selfyurt/packages/agent/internal/docker"
+	"github.com/selfyurt/selfyurt/packages/agent/internal/network"
 	"github.com/selfyurt/selfyurt/packages/agent/internal/runtime"
+	"github.com/selfyurt/selfyurt/packages/agent/internal/system"
 	"github.com/selfyurt/selfyurt/packages/agent/internal/types"
 )
 
 var hostnameRegex = regexp.MustCompile(`^(?=.{1,253}$)(?!-)[a-z0-9-]+(?:\.[a-z0-9-]+)+$`)
-var supportedDeployApps = map[string]bool{
-	"nginx-hello": true,
-	"redis":       true,
-	"postgres":    true,
-}
 
 type application struct {
-	cfg         types.Config
-	compose     *compose.Runner
-	caddy       *caddy.Manager
-	httpServer  *http.Server
+	cfg        types.Config
+	compose    *compose.Runner
+	caddy      *caddy.Manager
+	catalog    *catalog.CatalogService
+	system     *system.Inspector
+	backup     *backup.Manager
+	network    *network.Checker
+	httpServer *http.Server
 }
 
 func main() {
@@ -54,14 +55,20 @@ func main() {
 	}
 
 	app := &application{
-		cfg:     cfg,
-		compose: compose.NewRunner(cfg.RuntimeDir),
-		caddy:   caddy.NewManager(cfg.CaddySnippetsDir, cfg.CaddyContainer, cfg.CaddyReloadDisabled),
+		cfg:        cfg,
+		compose:    compose.NewRunner(cfg.RuntimeDir),
+		caddy:      caddy.NewManager(cfg.CaddySnippetsDir, cfg.CaddyContainer, cfg.CaddyReloadDisabled),
+		catalog:    catalog.NewCatalogService(cfg.CatalogDir),
+		system:     system.NewInspector(cfg.DockerNetwork),
+		backup:     backup.NewManager(filepath.Join(cfg.RuntimeDir, "backups")),
+		network:    network.NewChecker(5 * time.Second),
 	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", app.handleHealth)
 	mux.HandleFunc("/metrics", app.handleMetrics)
+	mux.HandleFunc("/system", app.handleSystem)
+	mux.HandleFunc("/backups", app.handleBackups)
 	mux.HandleFunc("/deploy", app.handleDeploy)
 	mux.HandleFunc("/stop", app.handleStop)
 	mux.HandleFunc("/start", app.handleStart)
@@ -174,14 +181,9 @@ func (a *application) handleDeploy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !supportedDeployApps[req.AppID] {
-		writeError(w, http.StatusNotImplemented, "only nginx-hello, redis, postgres are implemented in MVP")
-		return
-	}
-
-	manifest, err := a.loadManifest(req.AppID)
+	manifest, err := a.catalog.LoadManifest(req.AppID)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		writeError(w, http.StatusBadRequest, fmt.Sprintf("invalid app %s: %v", req.AppID, err))
 		return
 	}
 
@@ -428,19 +430,48 @@ func (a *application) handleLogs(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, types.LogsResponse{Logs: logs})
 }
 
-func (a *application) loadManifest(appID string) (*types.AppManifest, error) {
-	manifestPath := filepath.Join(a.cfg.CatalogDir, appID+".yml")
-	content, err := os.ReadFile(manifestPath)
+func (a *application) handleSystem(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+
+	info, err := a.system.GetSystemInfo(r.Context())
 	if err != nil {
-		return nil, fmt.Errorf("read manifest: %w", err)
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 
-	var manifest types.AppManifest
-	if err := yaml.Unmarshal(content, &manifest); err != nil {
-		return nil, fmt.Errorf("parse manifest: %w", err)
+	writeJSON(w, http.StatusOK, info)
+}
+
+func (a *application) handleBackups(w http.ResponseWriter, r *http.Request) {
+	instanceID := r.URL.Query().Get("instanceId")
+	if r.Method == http.MethodGet {
+		list, err := a.backup.ListBackups(instanceID)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		writeJSON(w, http.StatusOK, list)
+		return
 	}
 
-	return &manifest, nil
+	if r.Method == http.MethodPost {
+		if instanceID == "" {
+			writeError(w, http.StatusBadRequest, "instanceId is required")
+			return
+		}
+		meta, err := a.backup.CreateInstanceBackup(r.Context(), instanceID, a.cfg.RuntimeDir)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		writeJSON(w, http.StatusOK, meta)
+		return
+	}
+
+	writeError(w, http.StatusMethodNotAllowed, "method not allowed")
 }
 
 func decodeInstanceID(body io.ReadCloser) (string, error) {

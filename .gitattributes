@@ -1,0 +1,8 @@
+# GitHub Linguist Overrides
+# Highlight Go as the primary repository language on GitHub
+packages/web/** linguist-detectable=false
+packages/web/** linguist-vendored=true
+packages/api/** linguist-detectable=false
+packages/api/** linguist-vendored=true
+scripts/** linguist-detectable=false
+deploy/** linguist-detectable=false

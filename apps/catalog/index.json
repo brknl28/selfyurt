@@ -28,5 +28,11 @@
     "name": "Vaultwarden",
     "category": "security",
     "manifest": "vaultwarden.yml"
+  },
+  {
+    "id": "ghost",
+    "name": "Ghost Blog",
+    "category": "blog",
+    "manifest": "ghost.yml"
   }
 ]

@@ -104,7 +104,7 @@ function DashboardPage() {
                   <TableHead>Access</TableHead>
                   <TableHead>Endpoint</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="text-right"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -131,8 +131,8 @@ function DashboardPage() {
                     <TableCell>
                       <Badge variant={statusVariant(deployment.status)}>{deployment.status}</Badge>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-2">
+                    <TableCell className="text-right">
+                      <div className="flex flex-wrap justify-end gap-2">
                         {deployment.publicUrl ? (
                           <Button size="sm" variant="outline" asChild>
                             <a href={deployment.publicUrl} target="_blank" rel="noreferrer">

@@ -1,0 +1,70 @@
+id: ghost
+name: Ghost
+description: Professional publishing platform.
+category: blog
+icon: book
+compose:
+  template: |
+    services:
+      app:
+        image: ghost:5-alpine
+        container_name: sy-{{INSTANCE_ID}}-app
+        restart: unless-stopped
+        environment:
+          url: "https://{{DOMAIN}}"
+          database__client: mysql
+          database__connection__host: "{{DB_HOST}}"
+          database__connection__user: "{{DB_USER}}"
+          database__connection__password: "{{DB_PASSWORD}}"
+          database__connection__database: "{{DB_NAME}}"
+        volumes:
+          - {{INSTANCE_ID}}_content:/var/lib/ghost/content
+        networks:
+          - selfyurt_net
+    volumes:
+      {{INSTANCE_ID}}_content:
+    networks:
+      selfyurt_net:
+        external: true
+  variables:
+    - key: DB_HOST
+      required: true
+    - key: DB_USER
+      required: true
+    - key: DB_PASSWORD
+      required: true
+    - key: DB_NAME
+      required: true
+ingress:
+  targetService: app
+  targetPort: 2368
+access:
+  defaultExposePublic: true
+  supportsPublic: true
+  protocol: http
+envSchema:
+  - key: DB_HOST
+    label: Database Host
+    required: true
+    default: ""
+    secret: false
+  - key: DB_USER
+    label: Database User
+    required: true
+    default: "ghost"
+    secret: false
+  - key: DB_PASSWORD
+    label: Database Password
+    required: true
+    default: ""
+    secret: true
+  - key: DB_NAME
+    label: Database Name
+    required: true
+    default: "ghost"
+    secret: false
+volumes:
+  - name: content
+    mountPath: /var/lib/ghost/content
+    keepOnUninstall: true
+notes: Requires a MySQL/MariaDB database instance to connect to.

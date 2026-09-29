@@ -1,4 +1,19 @@
-# SelfYurt
+<div align="center">
+  <h1>SelfYurt</h1>
+  <p><em>Open-source self-hosting control plane for a single Ubuntu VPS</em></p>
+  
+  <p>
+    <img src="https://img.shields.io/badge/Go-1.22+-00ADD8?style=for-the-badge&logo=go" alt="Go" />
+    <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker" alt="Docker Compose" />
+    <img src="https://img.shields.io/badge/Caddy-2.8-1F88C0?style=for-the-badge&logo=caddy" alt="Caddy" />
+    <img src="https://img.shields.io/badge/Fastify-5.2-000000?style=for-the-badge&logo=fastify" alt="Fastify" />
+    <img src="https://img.shields.io/badge/TypeScript-5.7-3178C6?style=for-the-badge&logo=typescript" alt="TypeScript" />
+    <img src="https://img.shields.io/badge/React-18.3-61DAFB?style=for-the-badge&logo=react" alt="React" />
+    <img src="https://img.shields.io/badge/TailwindCSS-3.4-06B6D4?style=for-the-badge&logo=tailwindcss" alt="TailwindCSS" />
+    <img src="https://img.shields.io/badge/SQLite-3-003B57?style=for-the-badge&logo=sqlite" alt="SQLite" />
+    <img src="https://img.shields.io/badge/Vite-6.1-646CFF?style=for-the-badge&logo=vite" alt="Vite" />
+  </p>
+</div>
 
 SelfYurt is an open-source self-hosting control plane for a single Ubuntu VPS.
 You install it on your own server, connect your own domain, then deploy apps from a web panel to subdomains with automatic HTTPS.
