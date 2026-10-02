@@ -141,12 +141,12 @@ Then:
 
 ## Docs
 
-- `/Users/unallar/Desktop/Dev/selfyurt/docs/00-overview.md`
-- `/Users/unallar/Desktop/Dev/selfyurt/docs/01-quickstart.md`
-- `/Users/unallar/Desktop/Dev/selfyurt/docs/02-dns-and-domain.md`
-- `/Users/unallar/Desktop/Dev/selfyurt/docs/03-security.md`
-- `/Users/unallar/Desktop/Dev/selfyurt/docs/04-troubleshooting.md`
-- `/Users/unallar/Desktop/Dev/selfyurt/docs/05-app-manifest-spec.md`
+- `/docs/00-overview.md`
+- `/docs/01-quickstart.md`
+- `/docs/02-dns-and-domain.md`
+- `/docs/03-security.md`
+- `/docs/04-troubleshooting.md`
+- `/docs/05-app-manifest-spec.md`
 
 ## License
 
